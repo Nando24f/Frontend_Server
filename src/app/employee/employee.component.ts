@@ -2,34 +2,25 @@ import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ChartType } from 'chart.js';
 
 @Component({
   selector: 'app-employee',
   templateUrl: './employee.component.html',
+  styleUrls: ['./employee.component.css'],
   standalone: true,
-  imports: [CommonModule, FormsModule],
-  styleUrls: ['./employee.component.css']
+  imports: [
+    CommonModule,
+    FormsModule,
+  ],
 })
 export class EmployeeComponent implements OnInit {
   managers: any[] = [];
-  selectedManagerId: number | null = null;
-  selectedManagerName: string = '';
-  employees: any[] = [];
-  employeeCount: number = 0;
+  selectedManagerId: string = '';
+  employees: any[] = []; 
+
+  managerSelected: boolean = false;
   totalEmployees: number = 0;
-
-  pieChartData = {
-    labels: ['Gerente', 'Otros'],
-    datasets: [{ data: [0, 0] }]
-  };
-  pieChartType: ChartType = 'pie';
-
-  barChartData = {
-    labels: ['Total'],
-    datasets: [{ data: [0] }]
-  };
-  barChartType: ChartType = 'bar';
+  totalMalesByManager: number = 0; // Cambié el nombre para que coincida con el HTML
 
   constructor(private http: HttpClient) {}
 
@@ -44,38 +35,23 @@ export class EmployeeComponent implements OnInit {
     });
   }
 
-  onManagerSelect(): void {
-    if (!this.selectedManagerId) return;
-
-    const manager = this.managers.find(m => m.emp_no === this.selectedManagerId);
-    this.selectedManagerName = manager ? `${manager.first_name} ${manager.last_name}` : 'Desconocido';
-
-    this.http.get<any[]>(`/api/employees/manager/${this.selectedManagerId}/count`).subscribe(data => {
-      this.employeeCount = data[0]?.count || 0;
-      this.updateCharts();
-    });
-
-    this.http.get<any[]>(`/api/employees/manager/${this.selectedManagerId}`).subscribe(data => {
-      this.employees = data;
-    });
-  }
-
   loadTotalEmployees(): void {
     this.http.get<any[]>(`/api/employees/count`).subscribe(data => {
       this.totalEmployees = data[0]?.total || 0;
-      this.updateCharts();
     });
   }
 
-  updateCharts(): void {
-    this.pieChartData = {
-      labels: ['Gerente', 'Otros'],
-      datasets: [{ data: [this.employeeCount, this.totalEmployees - this.employeeCount] }]
-    };
+  onManagerSelect(): void {
+    if (!this.selectedManagerId) return;
 
-    this.barChartData = {
-      labels: ['Total'],
-      datasets: [{ data: [this.totalEmployees] }]
-    };
+    // Obtener empleados supervisados por el gerente
+    this.http.get<any[]>(`/api/employees/manager/${this.selectedManagerId}`).subscribe(data => {
+      this.employees = data;
+      this.managerSelected = true;
+      this.totalMalesByManager = data.length;
+      const manager = this.managers.find(m => m.emp_no === this.selectedManagerId);
+    this.selectedManagerId = manager ? `${manager.manager_name}` : '';
+
+    });
   }
 }
