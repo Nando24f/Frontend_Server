@@ -1,15 +1,21 @@
-import { Component, OnInit, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  ViewChild,
+  ElementRef,
+  AfterViewInit,
+} from '@angular/core';
 import Chart from 'chart.js/auto';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { HttpClient, HttpClientModule } from '@angular/common/http';
+import { ManagerService } from '../../services/manager.service'; 
 
 @Component({
   selector: 'app-manager-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, HttpClientModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './manager-dashboard.component.html',
-  styleUrls: ['./manager-dashboard.component.css']
+  styleUrls: ['./manager-dashboard.component.css'],
 })
 export class ManagerDashboardComponent implements OnInit, AfterViewInit {
   managers: any[] = [];
@@ -25,7 +31,7 @@ export class ManagerDashboardComponent implements OnInit, AfterViewInit {
   private managerEmployeesChart!: Chart;
   private chartsInitialized = false;
 
-  constructor(private http: HttpClient) {}
+  constructor(private managerService: ManagerService) {}
 
   ngOnInit(): void {
     this.loadManagers();
@@ -38,63 +44,51 @@ export class ManagerDashboardComponent implements OnInit, AfterViewInit {
   }
 
   loadManagers(): void {
-    const url = '/api/managers';
-
-    this.http.get<any[]>(url).subscribe({
+    this.managerService.getManagers().subscribe({
       next: (response) => {
         this.managers = response;
       },
       error: (error) => {
         console.error('Error al obtener los managers:', error);
         alert('Ocurrió un error al consultar los managers.');
-      }
+      },
     });
   }
 
   loadTotalEmployees(): void {
-    const url = '/api/employees/count';
-
-    this.http.get<any[]>(url).subscribe({
+    this.managerService.getTotalEmployees().subscribe({
       next: (response) => {
-        this.totalEmployees = response[0]?.total_employees || 0;
+        this.totalEmployees = response[0]?.total_count || 0;
         this.tryRenderCharts();
       },
       error: (error) => {
         console.error('Error al obtener el total de empleados:', error);
         alert('Ocurrió un error al consultar el total de empleados.');
-      }
+      },
     });
   }
 
   onManagerSelected(): void {
-    if (this.selectedManagerId) {
+    if (this.selectedManagerId !== null) {
       this.loadMaleEmployeesByManager(this.selectedManagerId);
       this.loadMaleEmployeesCountByManager(this.selectedManagerId);
     }
   }
 
   loadMaleEmployeesByManager(managerId: number): void {
-    const url = `/api/employees/manager/${managerId}/males`;
-    const params = {
-      page: '0',
-      size: '10'
-    };
-
-    this.http.get<any[]>(url, { params }).subscribe({
+    this.managerService.getMaleEmployeesByManager(managerId, 0, 10).subscribe({
       next: (response) => {
         this.employees = response;
       },
       error: (error) => {
         console.error('Error al obtener empleados masculinos:', error);
         alert('Ocurrió un error al consultar los empleados masculinos.');
-      }
+      },
     });
   }
 
   loadMaleEmployeesCountByManager(managerId: number): void {
-    const url = `/api/employees/manager/${managerId}/males/count`;
-
-    this.http.get<any[]>(url).subscribe({
+    this.managerService.getMaleEmployeesCountByManager(managerId).subscribe({
       next: (response) => {
         this.maleEmployeesCount = response[0]?.total_count || 0;
         this.tryRenderCharts();
@@ -102,7 +96,7 @@ export class ManagerDashboardComponent implements OnInit, AfterViewInit {
       error: (error) => {
         console.error('Error al obtener el conteo de empleados masculinos:', error);
         alert('Ocurrió un error al consultar el conteo de empleados masculinos.');
-      }
+      },
     });
   }
 
@@ -118,7 +112,6 @@ export class ManagerDashboardComponent implements OnInit, AfterViewInit {
   }
 
   private renderCharts(): void {
-    // Destruir gráficos anteriores si existen
     if (this.totalEmployeesChart) {
       this.totalEmployeesChart.destroy();
     }
@@ -129,7 +122,7 @@ export class ManagerDashboardComponent implements OnInit, AfterViewInit {
     const totalEmployeesChartElement = this.totalEmployeesChartRef.nativeElement;
     const managerEmployeesChartElement = this.managerEmployeesChartRef.nativeElement;
 
-    // Gráfico 1: Total de empleados vs. empleados del manager (Pie Chart)
+    // Pie Chart: Total vs empleados del manager
     this.totalEmployeesChart = new Chart(totalEmployeesChartElement, {
       type: 'pie',
       data: {
@@ -152,7 +145,7 @@ export class ManagerDashboardComponent implements OnInit, AfterViewInit {
       },
     });
 
-    // Gráfico 2: Distribución por género (Bar Chart)
+    // Bar Chart: Distribución de género
     this.managerEmployeesChart = new Chart(managerEmployeesChartElement, {
       type: 'bar',
       data: {
@@ -160,7 +153,7 @@ export class ManagerDashboardComponent implements OnInit, AfterViewInit {
         datasets: [
           {
             label: 'Empleados',
-            data: [this.maleEmployeesCount, 0], // Si agregas empleados femeninos, reemplaza el 0
+            data: [this.maleEmployeesCount, 0], // Puedes actualizar si agregas mujeres
             backgroundColor: ['#4BC0C0', '#FF9F40'],
           },
         ],
