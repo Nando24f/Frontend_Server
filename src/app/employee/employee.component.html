@@ -1,1 +1,31 @@
-<p>employee works!</p>
+<h2>Empleados hombres supervisados por el manager {{ managerId }}</h2>
+<p>Total encontrados: {{ totalMalesByManager }}</p>
+
+<table border="1">
+  <thead>
+    <tr>
+      <th>emp_no</th>
+      <th>Nombre</th>
+      <th>Apellido</th>
+      <th>Género</th>
+      <th>Fecha de contratación</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr *ngFor="let emp of employees">
+      <td>{{ emp.emp_no }}</td>
+      <td>{{ emp.first_name }}</td>
+      <td>{{ emp.last_name }}</td>
+      <td>{{ emp.gender }}</td>
+      <td>{{ emp.hire_date }}</td>
+    </tr>
+  </tbody>
+</table>
+
+<div style="margin-top: 1rem;">
+  <button (click)="prevPage()" [disabled]="page === 0">Anterior</button>
+  <span style="margin: 0 10px;">Página: {{ page + 1 }}</span>
+  <button (click)="nextPage()" [disabled]="(page + 1) * size >= totalMalesByManager">Siguiente</button>
+</div>
+
+<p style="margin-top: 2rem;">Total de empleados en el sistema: {{ totalEmployees }}</p>
