@@ -1,57 +1,50 @@
 <div class="container">
-  <h2>Consulta de empleados por gerente</h2>
+  <h2>Consulta por gerente</h2>
 
-  <div class="controls">
-    <label for="manager">Seleccione un gerente:</label>
-    <select id="manager" [(ngModel)]="selectedManagerId">
+  <!-- Selector de gerente -->
+  <div class="form-group">
+    <label for="managerSelect">Selecciona un gerente:</label>
+    <select id="managerSelect" [(ngModel)]="selectedManagerId">
       <option *ngFor="let manager of managers" [value]="manager.emp_no">
-        {{ manager.first_name }} {{ manager.last_name }} ({{ manager.emp_no }})
+        {{ manager.first_name }} {{ manager.last_name }}
       </option>
     </select>
-    <button (click)="loadManagerData()">Consultar</button>
+    <button (click)="onManagerSelect()">Consultar</button>
   </div>
 
-  <div *ngIf="employeeCount > 0">
-    <h3>La cantidad de personas que trabajan para {{ selectedManagerName }} es: {{ employeeCount }}</h3>
+  <!-- Cantidad de empleados -->
+  <div class="summary" *ngIf="selectedManagerId">
+    <p>
+      La cantidad de personas que trabajan para {{ selectedManagerName }} es:
+      <strong>{{ employeeCount }}</strong>
+    </p>
+  </div>
 
-    <div class="charts">
-      <div>
-        <h4>Empleados del gerente</h4>
-        <canvas baseChart 
-          [data]="[employeeCount, totalEmployees - employeeCount]" 
-          [labels]="['Gerente', 'Otros']"
-          [chartType]="'pie'">
-        </canvas>
-      </div>
-      <div>
-        <h4>Empleados totales</h4>
-        <canvas baseChart 
-          [data]="[totalEmployees]" 
-          [labels]="['Total']"
-          [chartType]="'bar'">
-        </canvas>
-      </div>
+  <!-- Contenedor central con tabla y gráficos -->
+  <div class="main-layout" *ngIf="selectedManagerId">
+    <!-- Tabla -->
+    <div class="table-container">
+      <h3>Empleados supervisados</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>emp_no</th>
+            <th>Nombre</th>
+            <th>Apellido</th>
+            <th>Género</th>
+            <th>Fecha de contratación</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let emp of employees">
+            <td>{{ emp.emp_no }}</td>
+            <td>{{ emp.first_name }}</td>
+            <td>{{ emp.last_name }}</td>
+            <td>{{ emp.gender }}</td>
+            <td>{{ emp.hire_date }}</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
-
-    <table>
-      <thead>
-        <tr>
-          <th>Emp No</th>
-          <th>Nombre</th>
-          <th>Apellido</th>
-          <th>Género</th>
-          <th>Fecha Contratación</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let emp of employees">
-          <td>{{ emp.emp_no }}</td>
-          <td>{{ emp.first_name }}</td>
-          <td>{{ emp.last_name }}</td>
-          <td>{{ emp.gender }}</td>
-          <td>{{ emp.hire_date }}</td>
-        </tr>
-      </tbody>
-    </table>
   </div>
 </div>
