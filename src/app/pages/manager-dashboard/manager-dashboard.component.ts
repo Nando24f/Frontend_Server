@@ -21,6 +21,10 @@ export class ManagerDashboardComponent implements OnInit, AfterViewInit {
   @ViewChild('totalEmployeesChart') totalEmployeesChartRef!: ElementRef;
   @ViewChild('managerEmployeesChart') managerEmployeesChartRef!: ElementRef;
 
+  private totalEmployeesChart!: Chart;
+  private managerEmployeesChart!: Chart;
+  private chartsInitialized = false;
+
   constructor(private http: HttpClient) {}
 
   ngOnInit(): void {
@@ -29,12 +33,13 @@ export class ManagerDashboardComponent implements OnInit, AfterViewInit {
   }
 
   ngAfterViewInit(): void {
-    // Los gráficos se renderizarán después de cargar los datos
+    this.chartsInitialized = true;
+    this.tryRenderCharts();
   }
 
   loadManagers(): void {
     const url = '/api/managers';
-    
+
     this.http.get<any[]>(url).subscribe({
       next: (response) => {
         this.managers = response;
@@ -48,11 +53,11 @@ export class ManagerDashboardComponent implements OnInit, AfterViewInit {
 
   loadTotalEmployees(): void {
     const url = '/api/employees/count';
-    
+
     this.http.get<any[]>(url).subscribe({
       next: (response) => {
         this.totalEmployees = response[0]?.total_employees || 0;
-        this.renderCharts();
+        this.tryRenderCharts();
       },
       error: (error) => {
         console.error('Error al obtener el total de empleados:', error);
@@ -70,11 +75,11 @@ export class ManagerDashboardComponent implements OnInit, AfterViewInit {
 
   loadMaleEmployeesByManager(managerId: number): void {
     const url = `/api/employees/manager/${managerId}/males`;
-    const params = { 
-      page: '0', 
-      size: '10' 
+    const params = {
+      page: '0',
+      size: '10'
     };
-    
+
     this.http.get<any[]>(url, { params }).subscribe({
       next: (response) => {
         this.employees = response;
@@ -88,11 +93,11 @@ export class ManagerDashboardComponent implements OnInit, AfterViewInit {
 
   loadMaleEmployeesCountByManager(managerId: number): void {
     const url = `/api/employees/manager/${managerId}/males/count`;
-    
+
     this.http.get<any[]>(url).subscribe({
       next: (response) => {
         this.maleEmployeesCount = response[0]?.total_count || 0;
-        this.renderCharts();
+        this.tryRenderCharts();
       },
       error: (error) => {
         console.error('Error al obtener el conteo de empleados masculinos:', error);
@@ -101,20 +106,31 @@ export class ManagerDashboardComponent implements OnInit, AfterViewInit {
     });
   }
 
-  renderCharts(): void {
+  private tryRenderCharts(): void {
+    if (!this.chartsInitialized) return;
+
+    const totalChartReady = this.totalEmployeesChartRef?.nativeElement;
+    const managerChartReady = this.managerEmployeesChartRef?.nativeElement;
+
+    if (totalChartReady && managerChartReady) {
+      this.renderCharts();
+    }
+  }
+
+  private renderCharts(): void {
     // Destruir gráficos anteriores si existen
+    if (this.totalEmployeesChart) {
+      this.totalEmployeesChart.destroy();
+    }
+    if (this.managerEmployeesChart) {
+      this.managerEmployeesChart.destroy();
+    }
+
     const totalEmployeesChartElement = this.totalEmployeesChartRef.nativeElement;
     const managerEmployeesChartElement = this.managerEmployeesChartRef.nativeElement;
 
-    if (totalEmployeesChartElement.chart) {
-      totalEmployeesChartElement.chart.destroy();
-    }
-    if (managerEmployeesChartElement.chart) {
-      managerEmployeesChartElement.chart.destroy();
-    }
-
     // Gráfico 1: Total de empleados vs. empleados del manager (Pie Chart)
-    new Chart(totalEmployeesChartElement, {
+    this.totalEmployeesChart = new Chart(totalEmployeesChartElement, {
       type: 'pie',
       data: {
         labels: ['Total Empleados', 'Empleados del Manager'],
@@ -137,14 +153,14 @@ export class ManagerDashboardComponent implements OnInit, AfterViewInit {
     });
 
     // Gráfico 2: Distribución por género (Bar Chart)
-    new Chart(managerEmployeesChartElement, {
+    this.managerEmployeesChart = new Chart(managerEmployeesChartElement, {
       type: 'bar',
       data: {
         labels: ['Masculino', 'Femenino'],
         datasets: [
           {
             label: 'Empleados',
-            data: [this.maleEmployeesCount, 0], // Ajusta según tus datos
+            data: [this.maleEmployeesCount, 0], // Si agregas empleados femeninos, reemplaza el 0
             backgroundColor: ['#4BC0C0', '#FF9F40'],
           },
         ],
