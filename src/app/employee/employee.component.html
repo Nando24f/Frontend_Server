@@ -1,9 +1,9 @@
 <div class="container">
   <div class="sidebar">
     <h3>Managers</h3>
-    <select [(ngModel)]="selectedManagerId" class="manager-select" (change)="onSearch()">
-      <option *ngFor="let manager of managers" [ngValue]="manager.manager_id">
-        {{ manager.first_name }} {{ manager.last_name }} (ID: {{ manager.manager_id }})
+    <select [(ngModel)]="selectedManagerId" class="manager-select">
+      <option *ngFor="let manager of managers" [value]="manager.emp_no">
+        {{ manager.manager_name }} (Dept: {{ manager.department }})
       </option>
     </select>
     <button (click)="onSearch()" class="search-button" [disabled]="!selectedManagerId">

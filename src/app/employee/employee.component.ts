@@ -4,6 +4,21 @@ import { FormsModule } from '@angular/forms';
 import { ChartModule } from 'primeng/chart';
 import { CommonModule } from '@angular/common';
 
+interface Manager {
+  emp_no: number;
+  manager_name: string;
+  department: string;
+}
+
+interface Employee {
+  emp_no: number;
+  first_name: string;
+  last_name: string;
+  gender: string;
+  birth_date: string;
+  hire_date: string;
+}
+
 @Component({
   selector: 'app-employee',
   templateUrl: './employee.component.html',
@@ -12,9 +27,9 @@ import { CommonModule } from '@angular/common';
   imports: [FormsModule, ChartModule, CommonModule]
 })
 export class EmployeeComponent implements OnInit {
-  managers: any[] = [];
+  managers: Manager[] = [];
   selectedManagerId: number | null = null;
-  maleEmployees: any[] = [];
+  maleEmployees: Employee[] = [];
   maleEmployeesCount: number = 0;
   totalEmployeesCount: number = 0;
   loading: boolean = false;
@@ -28,11 +43,11 @@ export class EmployeeComponent implements OnInit {
   }
 
   fetchManagers(): void {
-    this.http.get<any[]>('/api/managerss').subscribe({  
+    this.http.get<Manager[]>('/api/managerss').subscribe({
       next: (data) => {
         this.managers = data;
         if (data.length > 0) {
-          this.selectedManagerId = data[0].manager_id; // Auto-seleccionar primer manager
+          this.selectedManagerId = data[0].emp_no;
         }
       },
       error: (err) => console.error('Error fetching managers:', err)
@@ -40,42 +55,37 @@ export class EmployeeComponent implements OnInit {
   }
 
   fetchMaleEmployees(): void {
-    if (this.selectedManagerId === null || this.selectedManagerId === undefined) {
-      console.error('No manager selected');
+    if (!this.selectedManagerId) {
+      console.warn('No manager selected');
       return;
     }
     
     this.loading = true;
     
-    // Fetch count
-    this.http.get<any[]>(`/api/employees/manager/${this.selectedManagerId}/males/count`)
+    this.http.get<{count: number}[]>(`/api/employees/manager/${this.selectedManagerId}/males/count`)
       .subscribe({
         next: (data) => {
           this.maleEmployeesCount = data[0]?.count || 0;
           this.updateChartData();
         },
-        error: (err) => {
-          console.error('Error fetching male employees count:', err);
-          this.loading = false;
-        }
+        error: (err) => console.error('Error fetching male count:', err)
       });
     
-    // Fetch list
-    this.http.get<any[]>(`/api/employees/manager/${this.selectedManagerId}/males`)
+    this.http.get<Employee[]>(`/api/employees/manager/${this.selectedManagerId}/males`)
       .subscribe({
         next: (data) => {
           this.maleEmployees = data;
           this.loading = false;
         },
         error: (err) => {
-          console.error('Error fetching male employees:', err);
+          console.error('Error fetching employees:', err);
           this.loading = false;
         }
       });
   }
 
   fetchTotalEmployees(): void {
-    this.http.get<any[]>('/api/employees/count')
+    this.http.get<{count: number}[]>('/api/employees/count')
       .subscribe({
         next: (data) => {
           this.totalEmployeesCount = data[0]?.count || 0;
@@ -103,7 +113,7 @@ export class EmployeeComponent implements OnInit {
 
   onSearch(): void {
     if (!this.selectedManagerId) {
-      console.warn('No manager selected');
+      alert('Please select a manager first');
       return;
     }
     this.fetchMaleEmployees();
