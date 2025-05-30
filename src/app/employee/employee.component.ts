@@ -10,7 +10,6 @@ interface Manager {
   department: string;
 }
 
-
 interface Employee {
   emp_no: number;
   first_name: string;
@@ -32,19 +31,11 @@ export class EmployeeComponent implements OnInit {
   selectedManagerId: number | null = null;
   maleEmployees: Employee[] = [];
   maleEmployeesCount: number = 0;
-  totalEmployeesUnderManager: number = 0;
+  totalEmployees: number = 0; // Cambiado de totalEmployeesUnderManager a totalEmployees
   loading: boolean = false;
   chartData: any;
   chartOptions: any;
 
-
-  get hasChartData(): boolean {
-  if (!this.chartData || !this.chartData.datasets || this.chartData.datasets.length === 0) {
-    return false;
-  }
-  const data = this.chartData.datasets[0].data;
-  return data && data.some((d: number) => d > 0);
-}  
   private readonly API_BASE_URL = 'http://200.13.4.251:4200/api';
 
   constructor(private http: HttpClient) {}
@@ -78,7 +69,7 @@ export class EmployeeComponent implements OnInit {
   }
 
   fetchManagers(): void {
-    this.http.get<Manager[]>(`${this.API_BASE_URL}/managerss`).subscribe({
+    this.http.get<Manager[]>(`${this.API_BASE_URL}/managers`).subscribe({
       next: (data) => {
         this.managers = data;
         if (data.length > 0) {
@@ -89,72 +80,69 @@ export class EmployeeComponent implements OnInit {
     });
   }
 
- fetchMaleEmployees(): void {
-  if (!this.selectedManagerId) {
-    console.warn('No manager selected');
-    return;
-  }
-  
-  this.loading = true;
-  this.maleEmployees = [];
-  this.chartData = null;
-  
-  // 1. Obtener conteo de hombres bajo el manager
-  this.http.get<{count: number}[]>(
-    `${this.API_BASE_URL}/employees/manager/${this.selectedManagerId}/males/count`
-  ).subscribe({
-    next: (maleData) => {
-      this.maleEmployeesCount = maleData[0]?.count || 0;
-      
-      // 2. Obtener TOTAL GENERAL de empleados (no solo del manager)
-      this.http.get<{count: number}[]>(
-        `${this.API_BASE_URL}/employees/count`  // Esta es la consulta que devuelve el total general
-      ).subscribe({
-        next: (totalData) => {
-          this.totalEmployeesUnderManager = totalData[0]?.count || 0;
-          this.updateChartData();
-        },
-        error: (err) => console.error('Error fetching total employees:', err)
-      });
-    },
-    error: (err) => console.error('Error fetching male count:', err)
-  });
-  
-  // 3. Obtener lista de empleados masculinos
-  this.http.get<Employee[]>(
-    `${this.API_BASE_URL}/employees/manager/${this.selectedManagerId}/males`
-  ).subscribe({
-    next: (data) => {
-      this.maleEmployees = data;
-      this.loading = false;
-    },
-    error: (err) => {
-      console.error('Error fetching employees:', err);
-      this.loading = false;
+  fetchMaleEmployees(): void {
+    if (!this.selectedManagerId) {
+      console.warn('No manager selected');
+      return;
     }
-  });
-}
-
-updateChartData(): void {
-  if (this.totalEmployeesUnderManager > 0 && this.maleEmployeesCount >= 0) {
-    const otherEmployees = this.totalEmployeesUnderManager - this.maleEmployeesCount;
     
-    this.chartData = {
-      labels: ['Hombres bajo manager', 'Otros empleados'],
-      datasets: [
-        {
-          data: [this.maleEmployeesCount, otherEmployees],
-          backgroundColor: ['#42A5F5', '#FFA726'],
-          hoverBackgroundColor: ['#64B5F6', '#FFB74D'],
-          borderWidth: 1
-        }
-      ]
-    };
-  } else {
+    this.loading = true;
+    this.maleEmployees = [];
     this.chartData = null;
-    console.warn('Datos insuficientes para mostrar el gráfico');
+    
+    // 1. Obtener lista de empleados masculinos
+    this.http.get<Employee[]>(
+      `${this.API_BASE_URL}/employees/manager/${this.selectedManagerId}/males`
+    ).subscribe({
+      next: (data) => {
+        this.maleEmployees = data;
+        this.maleEmployeesCount = data.length;
+        
+        // 2. Obtener TOTAL de empleados en la empresa
+        this.http.get<{count: number}[]>(
+          `${this.API_BASE_URL}/employees/count`
+        ).subscribe({
+          next: (totalData) => {
+            this.totalEmployees = totalData[0]?.count || 0;
+            this.updateChartData();
+            this.loading = false;
+          },
+          error: (err) => {
+            console.error('Error fetching total employees:', err);
+            this.loading = false;
+          }
+        });
+      },
+      error: (err) => {
+        console.error('Error fetching male employees:', err);
+        this.loading = false;
+      }
+    });
   }
-}
+
+  updateChartData(): void {
+    if (this.totalEmployees > 0 && this.maleEmployeesCount > 0) {
+      const otherEmployees = this.totalEmployees - this.maleEmployeesCount;
+      
+      this.chartData = {
+        labels: ['Hombres bajo manager', 'Total otros empleados'],
+        datasets: [
+          {
+            data: [this.maleEmployeesCount, otherEmployees],
+            backgroundColor: ['#42A5F5', '#FFA726'],
+            hoverBackgroundColor: ['#64B5F6', '#FFB74D'],
+            borderWidth: 1
+          }
+        ]
+      };
+    } else {
+      this.chartData = null;
+      console.warn('Datos insuficientes para el gráfico', {
+        total: this.totalEmployees,
+        males: this.maleEmployeesCount
+      });
+    }
+  }
 
   onSearch(): void {
     if (!this.selectedManagerId) {

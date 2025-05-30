@@ -15,21 +15,21 @@
     <div *ngIf="loading" class="loading">Loading...</div>
 
     <div *ngIf="maleEmployees.length > 0" class="results">
-      <h3>Male Employees Count: {{ maleEmployeesCount }}</h3>
-      <h3>Total Employees Under Manager: {{ totalEmployeesUnderManager }}</h3>
+      <h3>Male Employees Under Manager: {{ maleEmployeesCount }}</h3>
+      <h3>Total Employees in Company: {{ totalEmployees }}</h3>
       
       <div class="chart-container">
-  <h3>Distribución de Empleados</h3>
-  <p-chart *ngIf="chartData && hasChartData" 
-           type="pie" 
-           [data]="chartData"
-           [options]="chartOptions"
-           style="height: 300px">
-  </p-chart>
-  <div *ngIf="chartData && !hasChartData" class="no-data">
-    No hay datos suficientes para mostrar el gráfico
-  </div>
-</div>
+        <h3>Employees Distribution</h3>
+        <p-chart *ngIf="chartData" 
+                 type="pie" 
+                 [data]="chartData"
+                 [options]="chartOptions"
+                 style="height: 300px">
+        </p-chart>
+        <div *ngIf="!chartData" class="no-data">
+          No hay datos suficientes para mostrar el gráfico
+        </div>
+      </div>
 
       <table>
         <thead>
