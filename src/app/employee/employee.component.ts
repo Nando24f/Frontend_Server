@@ -1,14 +1,15 @@
 import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { FormsModule } from '@angular/forms'; // <-- Agrega esto
-import { ChartModule } from 'primeng/chart'; // Asegúrate de tener instalado PrimeNG y su módulo de gráficos
+import { FormsModule } from '@angular/forms';
+import { ChartModule } from 'primeng/chart';
 import { CommonModule } from '@angular/common';
+
 @Component({
   selector: 'app-employee',
   templateUrl: './employee.component.html',
   styleUrls: ['./employee.component.css'],
   standalone: true,
-  imports: [FormsModule, ChartModule,CommonModule] // Asegúrate de importar FormsModule y ChartModule
+  imports: [FormsModule, ChartModule, CommonModule]
 })
 export class EmployeeComponent implements OnInit {
   managers: any[] = [];
@@ -27,7 +28,7 @@ export class EmployeeComponent implements OnInit {
   }
 
   fetchManagers(): void {
-    this.http.get<any[]>('http://200.13.4.221:8080/api/managerss').subscribe({
+    this.http.get<any[]>('/api/managerss').subscribe({
       next: (data) => this.managers = data,
       error: (err) => console.error('Error fetching managers:', err)
     });
@@ -39,7 +40,7 @@ export class EmployeeComponent implements OnInit {
     this.loading = true;
     
     // Fetch count
-    this.http.get<any[]>(`http://200.13.4.221:8080/api/employees/manager/${this.selectedManagerId}/males/count`)
+    this.http.get<any[]>(`/api/employees/manager/${this.selectedManagerId}/males/count`)
       .subscribe({
         next: (data) => {
           this.maleEmployeesCount = data[0]?.count || 0;
@@ -49,7 +50,7 @@ export class EmployeeComponent implements OnInit {
       });
     
     // Fetch list
-    this.http.get<any[]>(`http://200.13.4.221:8080/api/employees/manager/${this.selectedManagerId}/males`)
+    this.http.get<any[]>(`/api/employees/manager/${this.selectedManagerId}/males`)
       .subscribe({
         next: (data) => {
           this.maleEmployees = data;
@@ -63,7 +64,7 @@ export class EmployeeComponent implements OnInit {
   }
 
   fetchTotalEmployees(): void {
-    this.http.get<any[]>('http://200.13.4.221:8080/api/employees/count')
+    this.http.get<any[]>('/api/employees/count')
       .subscribe({
         next: (data) => {
           this.totalEmployeesCount = data[0]?.count || 0;
