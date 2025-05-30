@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-
+import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { EmployeeComponent } from './employee.component';
 
 describe('EmployeeComponent', () => {
@@ -8,9 +8,9 @@ describe('EmployeeComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [EmployeeComponent]
-    })
-    .compileComponents();
+      imports: [HttpClientTestingModule],
+      declarations: [EmployeeComponent]
+    }).compileComponents();
 
     fixture = TestBed.createComponent(EmployeeComponent);
     component = fixture.componentInstance;
@@ -19,5 +19,13 @@ describe('EmployeeComponent', () => {
 
   it('should create', () => {
     expect(component).toBeTruthy();
+  });
+
+  it('should initialize with empty data', () => {
+    expect(component.managers.length).toBe(0);
+    expect(component.maleEmployees.length).toBe(0);
+    expect(component.maleEmployeesCount).toBe(0);
+    expect(component.totalEmployeesCount).toBe(0);
+    expect(component.selectedManagerId).toBeNull();
   });
 });

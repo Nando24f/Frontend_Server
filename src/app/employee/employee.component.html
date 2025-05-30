@@ -1,50 +1,51 @@
 <div class="container">
-  <h2>Consulta por gerente</h2>
-
-  <!-- Selector de gerente -->
-  <div class="form-group">
-    <label for="managerSelect">Selecciona un gerente:</label>
-    <select id="managerSelect" [(ngModel)]="selectedManagerId">
-      <option *ngFor="let manager of managers" [value]="manager.emp_no">
-        {{ manager.first_name }} {{ manager.last_name }}
+  <div class="sidebar">
+    <h3>Managers</h3>
+    <select [(ngModel)]="selectedManagerId" class="manager-select">
+      <option *ngFor="let manager of managers" [value]="manager.manager_id">
+        {{ manager.first_name }} {{ manager.last_name }} (ID: {{ manager.manager_id }})
       </option>
     </select>
-    <button (click)="onManagerSelect()">Consultar</button>
+    <button (click)="onSearch()" class="search-button">Search</button>
   </div>
 
-  <!-- Cantidad de empleados -->
-  <div class="summary" *ngIf="selectedManagerId">
-    <p>
-      La cantidad de personas que trabajan para {{ selectedManagerId }} es:
-      <strong>{{ totalEmployees }}</strong>
-    </p>
-  </div>
+  <div class="main-content">
+    <div *ngIf="loading" class="loading">Loading...</div>
 
-  <!-- Contenedor central con tabla y gráficos -->
-  <div class="main-layout" *ngIf="selectedManagerId">
-    <!-- Tabla -->
-    <div class="table-container">
-      <h3>Empleados supervisados</h3>
+    <div *ngIf="maleEmployees.length > 0" class="results">
+      <h3>Male Employees Count: {{ maleEmployeesCount }}</h3>
+      
+      <div class="chart-container">
+        <h3>Employees Distribution</h3>
+        <p-chart *ngIf="chartData" type="pie" [data]="chartData"></p-chart>
+      </div>
+
       <table>
         <thead>
           <tr>
-            <th>emp_no</th>
-            <th>Nombre</th>
-            <th>Apellido</th>
-            <th>Género</th>
-            <th>Fecha de contratación</th>
+            <th>ID</th>
+            <th>First Name</th>
+            <th>Last Name</th>
+            <th>Gender</th>
+            <th>Birth Date</th>
+            <th>Hire Date</th>
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let emp of employees">
-            <td>{{ emp.emp_no }}</td>
-            <td>{{ emp.first_name }}</td>
-            <td>{{ emp.last_name }}</td>
-            <td>{{ emp.gender }}</td>
-            <td>{{ emp.hire_date }}</td>
+          <tr *ngFor="let employee of maleEmployees">
+            <td>{{ employee.emp_no }}</td>
+            <td>{{ employee.first_name }}</td>
+            <td>{{ employee.last_name }}</td>
+            <td>{{ employee.gender }}</td>
+            <td>{{ employee.birth_date }}</td>
+            <td>{{ employee.hire_date }}</td>
           </tr>
         </tbody>
       </table>
+    </div>
+
+    <div *ngIf="maleEmployees.length === 0 && !loading" class="no-results">
+      Select a manager and click "Search" to view male employees
     </div>
   </div>
 </div>
