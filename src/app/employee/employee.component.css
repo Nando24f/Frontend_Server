@@ -74,7 +74,7 @@ tr:hover {
   color: #666;
 }
 
-.no-results {
+.no-results, .no-data {
   padding: 20px;
   text-align: center;
   font-style: italic;

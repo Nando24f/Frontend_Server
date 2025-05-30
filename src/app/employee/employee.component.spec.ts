@@ -28,4 +28,9 @@ describe('EmployeeComponent', () => {
     expect(component.maleEmployees.length).toBe(0);
     expect(component.selectedManagerId).toBeNull();
   });
+
+  it('should initialize chart options', () => {
+    expect(component.chartOptions).toBeDefined();
+    expect(component.chartOptions.responsive).toBeTrue();
+  });
 });

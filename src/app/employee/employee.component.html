@@ -16,10 +16,19 @@
 
     <div *ngIf="maleEmployees.length > 0" class="results">
       <h3>Male Employees Count: {{ maleEmployeesCount }}</h3>
+      <h3>Total Employees Under Manager: {{ totalEmployeesUnderManager }}</h3>
       
       <div class="chart-container">
         <h3>Employees Distribution</h3>
-        <p-chart *ngIf="chartData" type="pie" [data]="chartData"></p-chart>
+        <p-chart *ngIf="chartData && hasChartData" 
+                 type="pie" 
+                 [data]="chartData"
+                 [options]="chartOptions"
+                 style="height: 300px">
+        </p-chart>
+        <div *ngIf="chartData && !hasChartData" class="no-data">
+          No hay datos suficientes para mostrar el gráfico
+        </div>
       </div>
 
       <table>
