@@ -10,8 +10,6 @@ interface Manager {
   department: string;
 }
 
-const API_BASE_URL = 'http://200.13.4.221:8080/api';
-
 interface Employee {
   emp_no: number;
   first_name: string;
@@ -44,7 +42,7 @@ export class EmployeeComponent implements OnInit {
   }
 
   fetchManagers(): void {
-    this.http.get<Manager[]>(`${API_BASE_URL}/managerss`).subscribe({
+    this.http.get<Manager[]>('/api/managerss').subscribe({
       next: (data) => {
         this.managers = data;
         if (data.length > 0) {
@@ -64,13 +62,13 @@ export class EmployeeComponent implements OnInit {
     this.loading = true;
     
     // 1. Obtener conteo de hombres bajo el manager
-    this.http.get<{count: number}[]>(`${API_BASE_URL}/employees/manager/${this.selectedManagerId}/males/count`)
+    this.http.get<{count: number}[]>(`/api/employees/manager/${this.selectedManagerId}/males/count`)
       .subscribe({
         next: (maleData) => {
           this.maleEmployeesCount = maleData[0]?.count || 0;
           
           // 2. Obtener TOTAL de empleados bajo este manager
-          this.http.get<{count: number}[]>(`${API_BASE_URL}/employees/manager/${this.selectedManagerId}/count`)
+          this.http.get<{count: number}[]>(`/api/employees/manager/${this.selectedManagerId}/count`)
             .subscribe({
               next: (totalData) => {
                 this.totalEmployeesUnderManager = totalData[0]?.count || 0;
@@ -83,7 +81,7 @@ export class EmployeeComponent implements OnInit {
       });
     
     // 3. Obtener lista de empleados masculinos
-    this.http.get<Employee[]>(`${API_BASE_URL}/employees/manager/${this.selectedManagerId}/males`)
+    this.http.get<Employee[]>(`/api/employees/manager/${this.selectedManagerId}/males`)
       .subscribe({
         next: (data) => {
           this.maleEmployees = data;
