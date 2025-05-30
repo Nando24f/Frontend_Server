@@ -68,7 +68,7 @@ export class EmployeeComponent implements OnInit {
           this.maleEmployeesCount = maleData[0]?.count || 0;
           
           // 2. Obtener TOTAL de empleados bajo este manager
-          this.http.get<{count: number}[]>(`/api/employees/manager/${this.selectedManagerId}/count`)
+          this.http.get<{count: number}[]>(`/api/employees/count`)
             .subscribe({
               next: (totalData) => {
                 this.totalEmployeesUnderManager = totalData[0]?.count || 0;
