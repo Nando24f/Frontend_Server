@@ -31,7 +31,7 @@ export class EmployeeComponent implements OnInit {
   selectedManagerId: number | null = null;
   maleEmployees: Employee[] = [];
   maleEmployeesCount: number = 0;
-  totalEmployeesCount: number = 0;
+  totalEmployeesUnderManager: number = 0; // Nuevo: total bajo el manager
   loading: boolean = false;
   chartData: any;
 
@@ -39,11 +39,10 @@ export class EmployeeComponent implements OnInit {
 
   ngOnInit(): void {
     this.fetchManagers();
-    this.fetchTotalEmployees();
   }
 
   fetchManagers(): void {
-    this.http.get<Manager[]>('/api/managerss').subscribe({
+    this.http.get<Manager[]>('/api/managers').subscribe({
       next: (data) => {
         this.managers = data;
         if (data.length > 0) {
@@ -62,15 +61,26 @@ export class EmployeeComponent implements OnInit {
     
     this.loading = true;
     
+    // 1. Obtener conteo de hombres bajo el manager
     this.http.get<{count: number}[]>(`/api/employees/manager/${this.selectedManagerId}/males/count`)
       .subscribe({
-        next: (data) => {
-          this.maleEmployeesCount = data[0]?.count || 0;
-          this.updateChartData();
+        next: (maleData) => {
+          this.maleEmployeesCount = maleData[0]?.count || 0;
+          
+          // 2. Obtener TOTAL de empleados bajo este manager
+          this.http.get<{count: number}[]>(`/api/employees/manager/${this.selectedManagerId}/count`)
+            .subscribe({
+              next: (totalData) => {
+                this.totalEmployeesUnderManager = totalData[0]?.count || 0;
+                this.updateChartData();
+              },
+              error: (err) => console.error('Error fetching total under manager:', err)
+            });
         },
         error: (err) => console.error('Error fetching male count:', err)
       });
     
+    // 3. Obtener lista de empleados masculinos
     this.http.get<Employee[]>(`/api/employees/manager/${this.selectedManagerId}/males`)
       .subscribe({
         next: (data) => {
@@ -84,22 +94,11 @@ export class EmployeeComponent implements OnInit {
       });
   }
 
-  fetchTotalEmployees(): void {
-    this.http.get<{count: number}[]>('/api/employees/count')
-      .subscribe({
-        next: (data) => {
-          this.totalEmployeesCount = data[0]?.count || 0;
-          this.updateChartData();
-        },
-        error: (err) => console.error('Error fetching total employees:', err)
-      });
-  }
-
   updateChartData(): void {
-    if (this.totalEmployeesCount > 0) {
-      const otherEmployees = this.totalEmployeesCount - this.maleEmployeesCount;
+    if (this.totalEmployeesUnderManager > 0) {
+      const otherEmployees = this.totalEmployeesUnderManager - this.maleEmployeesCount;
       this.chartData = {
-        labels: ['Male Employees Under Manager', 'Other Employees'],
+        labels: ['Hombres', 'Otros (mismo manager)'],
         datasets: [
           {
             data: [this.maleEmployeesCount, otherEmployees],
@@ -113,7 +112,7 @@ export class EmployeeComponent implements OnInit {
 
   onSearch(): void {
     if (!this.selectedManagerId) {
-      alert('Please select a manager first');
+      alert('Por favor selecciona un manager');
       return;
     }
     this.fetchMaleEmployees();
