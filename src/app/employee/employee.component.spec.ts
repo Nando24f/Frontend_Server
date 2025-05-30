@@ -1,6 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { FormsModule } from '@angular/forms';
 import { EmployeeComponent } from './employee.component';
+import { ChartModule } from 'primeng/chart';
 
 describe('EmployeeComponent', () => {
   let component: EmployeeComponent;
@@ -8,7 +10,7 @@ describe('EmployeeComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [HttpClientTestingModule],
+      imports: [HttpClientTestingModule, FormsModule, ChartModule],
       declarations: [EmployeeComponent]
     }).compileComponents();
 
@@ -27,5 +29,11 @@ describe('EmployeeComponent', () => {
     expect(component.maleEmployeesCount).toBe(0);
     expect(component.totalEmployeesCount).toBe(0);
     expect(component.selectedManagerId).toBeNull();
+  });
+
+  it('should not fetch male employees when no manager is selected', () => {
+    spyOn(component, 'fetchMaleEmployees');
+    component.onSearch();
+    expect(component.fetchMaleEmployees).not.toHaveBeenCalled();
   });
 });

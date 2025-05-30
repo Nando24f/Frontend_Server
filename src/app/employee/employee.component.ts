@@ -28,14 +28,22 @@ export class EmployeeComponent implements OnInit {
   }
 
   fetchManagers(): void {
-    this.http.get<any[]>('/api/managerss').subscribe({
-      next: (data) => this.managers = data,
+    this.http.get<any[]>('/api/managerss').subscribe({  
+      next: (data) => {
+        this.managers = data;
+        if (data.length > 0) {
+          this.selectedManagerId = data[0].manager_id; // Auto-seleccionar primer manager
+        }
+      },
       error: (err) => console.error('Error fetching managers:', err)
     });
   }
 
   fetchMaleEmployees(): void {
-    if (!this.selectedManagerId) return;
+    if (this.selectedManagerId === null || this.selectedManagerId === undefined) {
+      console.error('No manager selected');
+      return;
+    }
     
     this.loading = true;
     
@@ -46,7 +54,10 @@ export class EmployeeComponent implements OnInit {
           this.maleEmployeesCount = data[0]?.count || 0;
           this.updateChartData();
         },
-        error: (err) => console.error('Error fetching male employees count:', err)
+        error: (err) => {
+          console.error('Error fetching male employees count:', err);
+          this.loading = false;
+        }
       });
     
     // Fetch list
@@ -91,6 +102,10 @@ export class EmployeeComponent implements OnInit {
   }
 
   onSearch(): void {
+    if (!this.selectedManagerId) {
+      console.warn('No manager selected');
+      return;
+    }
     this.fetchMaleEmployees();
   }
 }
