@@ -89,72 +89,72 @@ export class EmployeeComponent implements OnInit {
     });
   }
 
-  fetchMaleEmployees(): void {
-    if (!this.selectedManagerId) {
-      console.warn('No manager selected');
-      return;
-    }
-    
-    this.loading = true;
-    this.maleEmployees = [];
-    this.chartData = null;
-    
-    // 1. Obtener conteo de hombres bajo el manager
-    this.http.get<{count: number}[]>(
-      `${this.API_BASE_URL}/employees/manager/${this.selectedManagerId}/males/count`
-    ).subscribe({
-      next: (maleData) => {
-        this.maleEmployeesCount = maleData[0]?.count || 0;
-        
-        // 2. Obtener TOTAL de empleados bajo este manager
-        this.http.get<{count: number}[]>(
-          `${this.API_BASE_URL}/employees/manager/${this.selectedManagerId}/count`
-        ).subscribe({
-          next: (totalData) => {
-            this.totalEmployeesUnderManager = totalData[0]?.count || 0;
-            this.updateChartData();
-          },
-          error: (err) => console.error('Error fetching total under manager:', err)
-        });
-      },
-      error: (err) => console.error('Error fetching male count:', err)
-    });
-    
-    // 3. Obtener lista de empleados masculinos
-    this.http.get<Employee[]>(
-      `${this.API_BASE_URL}/employees/manager/${this.selectedManagerId}/males`
-    ).subscribe({
-      next: (data) => {
-        this.maleEmployees = data;
-        this.loading = false;
-      },
-      error: (err) => {
-        console.error('Error fetching employees:', err);
-        this.loading = false;
-      }
-    });
+ fetchMaleEmployees(): void {
+  if (!this.selectedManagerId) {
+    console.warn('No manager selected');
+    return;
   }
-
-  updateChartData(): void {
-    if (this.totalEmployeesUnderManager > 0 && this.maleEmployeesCount >= 0) {
-      const otherEmployees = Math.max(0, this.totalEmployeesUnderManager - this.maleEmployeesCount);
+  
+  this.loading = true;
+  this.maleEmployees = [];
+  this.chartData = null;
+  
+  // 1. Obtener conteo de hombres bajo el manager
+  this.http.get<{count: number}[]>(
+    `${this.API_BASE_URL}/employees/manager/${this.selectedManagerId}/males/count`
+  ).subscribe({
+    next: (maleData) => {
+      this.maleEmployeesCount = maleData[0]?.count || 0;
       
-      this.chartData = {
-        labels: ['Hombres', 'Otros empleados'],
-        datasets: [
-          {
-            data: [this.maleEmployeesCount, otherEmployees],
-            backgroundColor: ['#42A5F5', '#FFA726'],
-            hoverBackgroundColor: ['#64B5F6', '#FFB74D'],
-            borderWidth: 1
-          }
-        ]
-      };
-    } else {
-      this.chartData = null;
-      console.warn('Datos insuficientes para mostrar el gráfico');
+      // 2. Obtener TOTAL GENERAL de empleados (no solo del manager)
+      this.http.get<{count: number}[]>(
+        `${this.API_BASE_URL}/employees/count`  // Esta es la consulta que devuelve el total general
+      ).subscribe({
+        next: (totalData) => {
+          this.totalEmployeesUnderManager = totalData[0]?.count || 0;
+          this.updateChartData();
+        },
+        error: (err) => console.error('Error fetching total employees:', err)
+      });
+    },
+    error: (err) => console.error('Error fetching male count:', err)
+  });
+  
+  // 3. Obtener lista de empleados masculinos
+  this.http.get<Employee[]>(
+    `${this.API_BASE_URL}/employees/manager/${this.selectedManagerId}/males`
+  ).subscribe({
+    next: (data) => {
+      this.maleEmployees = data;
+      this.loading = false;
+    },
+    error: (err) => {
+      console.error('Error fetching employees:', err);
+      this.loading = false;
     }
+  });
+}
+
+updateChartData(): void {
+  if (this.totalEmployeesUnderManager > 0 && this.maleEmployeesCount >= 0) {
+    const otherEmployees = this.totalEmployeesUnderManager - this.maleEmployeesCount;
+    
+    this.chartData = {
+      labels: ['Hombres bajo manager', 'Otros empleados'],
+      datasets: [
+        {
+          data: [this.maleEmployeesCount, otherEmployees],
+          backgroundColor: ['#42A5F5', '#FFA726'],
+          hoverBackgroundColor: ['#64B5F6', '#FFB74D'],
+          borderWidth: 1
+        }
+      ]
+    };
+  } else {
+    this.chartData = null;
+    console.warn('Datos insuficientes para mostrar el gráfico');
   }
+}
 
   onSearch(): void {
     if (!this.selectedManagerId) {
