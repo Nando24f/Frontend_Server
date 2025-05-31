@@ -87,43 +87,43 @@ export class EmployeeComponent implements OnInit {
     });
   }
 
-  fetchMaleEmployees(): void {
-    if (!this.selectedManagerId) {
-      console.warn('No manager selected');
-      return;
-    }
-    
-    this.loading = true;
-    this.maleEmployees = [];
-    this.chartData = null;
-    this.currentPage = 0;
-    
-    // 1. Obtener conteo total de hombres bajo el manager
-    this.http.get<{count: number}[]>(
-      `${this.API_BASE_URL}/employees/manager/${this.selectedManagerId}/males/count`
-    ).subscribe({
-      next: (countData) => {
-        this.totalRecords = countData[0]?.count || 0;
-        this.maleEmployeesCount = this.totalRecords;
-        this.totalPages = Math.ceil(this.totalRecords / this.pageSize);
-        
-        // 2. Obtener lista paginada de empleados masculinos
-        this.loadPage();
-        
-        // 3. Obtener TOTAL de empleados en la empresa
-        this.http.get<{count: number}[]>(
-          `${this.API_BASE_URL}/employees/count`
-        ).subscribe({
-          next: (totalData) => {
-            this.totalEmployees = totalData[0]?.count || 0;
-            this.updateChartData();
-          },
-          error: (err) => console.error('Error fetching total employees:', err)
-        });
-      },
-      error: (err) => console.error('Error fetching male count:', err)
-    });
+ fetchMaleEmployees(): void {
+  if (!this.selectedManagerId) {
+    console.warn('No manager selected');
+    return;
   }
+  
+  this.loading = true;
+  this.maleEmployees = [];
+  this.chartData = null;
+  this.currentPage = 0;
+  
+  // 1. Obtener conteo total de hombres bajo el manager
+  this.http.get<{total_count: number}>(
+    `${this.API_BASE_URL}/employees/manager/${this.selectedManagerId}/males/count`
+  ).subscribe({
+    next: (countData) => {
+      this.totalRecords = countData.total_count || 0;
+      this.maleEmployeesCount = this.totalRecords;
+      this.totalPages = Math.ceil(this.totalRecords / this.pageSize);
+      
+      // 2. Obtener lista paginada de empleados masculinos
+      this.loadPage();
+      
+      // 3. Obtener TOTAL de empleados en la empresa
+      this.http.get<{total_count: number}>(
+        `${this.API_BASE_URL}/employees/count`
+      ).subscribe({
+        next: (totalData) => {
+          this.totalEmployees = totalData.total_count || 0;
+          this.updateChartData();
+        },
+        error: (err) => console.error('Error fetching total employees:', err)
+      });
+    },
+    error: (err) => console.error('Error fetching male count:', err)
+  });
+}
 
   loadPage(): void {
     this.http.get<Employee[]>(
