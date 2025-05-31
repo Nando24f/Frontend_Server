@@ -88,43 +88,39 @@ export class EmployeeComponent implements OnInit {
   }
 
  fetchMaleEmployees(): void {
-  if (!this.selectedManagerId) {
-    console.warn('No manager selected');
-    return;
-  }
-  
+  if (!this.selectedManagerId) return;
+
   this.loading = true;
-  this.maleEmployees = [];
-  this.chartData = null;
-  this.currentPage = 0;
   
-  // 1. Obtener conteo total de hombres bajo el manager
+  // 1. Obtener conteo de hombres
   this.http.get<{total_count: number}>(
     `${this.API_BASE_URL}/employees/manager/${this.selectedManagerId}/males/count`
   ).subscribe({
-    next: (countData) => {
-      this.totalRecords = countData.total_count || 0;
-      this.maleEmployeesCount = this.totalRecords;
-      this.totalPages = Math.ceil(this.totalRecords / this.pageSize);
+    next: (response) => {
+      this.maleEmployeesCount = response.total_count;
+      this.totalRecords = response.total_count;
       
-      // 2. Obtener lista paginada de empleados masculinos
-      this.loadPage();
-      
-      // 3. Obtener TOTAL de empleados en la empresa
+      // 2. Obtener total general de empleados
       this.http.get<{total_count: number}>(
         `${this.API_BASE_URL}/employees/count`
       ).subscribe({
-        next: (totalData) => {
-          this.totalEmployees = totalData.total_count || 0;
+        next: (totalResponse) => {
+          this.totalEmployees = totalResponse.total_count;
           this.updateChartData();
+          this.loadPage(); // Cargar primera página de resultados
         },
-        error: (err) => console.error('Error fetching total employees:', err)
+        error: (err) => {
+          console.error('Error total employees:', err);
+          this.loading = false;
+        }
       });
     },
-    error: (err) => console.error('Error fetching male count:', err)
+    error: (err) => {
+      console.error('Error male count:', err);
+      this.loading = false;
+    }
   });
 }
-
   loadPage(): void {
     this.http.get<Employee[]>(
       `${this.API_BASE_URL}/employees/manager/${this.selectedManagerId}/males?page=${this.currentPage}&size=${this.pageSize}`
