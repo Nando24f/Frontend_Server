@@ -15,7 +15,7 @@
     <div *ngIf="loading" class="loading">Loading...</div>
 
     <div *ngIf="maleEmployees.length > 0" class="results">
-      <h3>Male Employees Under Manager: {{ maleEmployeesCount }}</h3>
+      <h3>Male Employees Under Manager: {{ maleEmployeesCount }} ({{ displayedRange }})</h3>
       <h3>Total Employees in Company: {{ totalEmployees }}</h3>
       
       <div class="chart-container">
@@ -54,11 +54,19 @@
         </tbody>
       </table>
 
-      <!-- Controles de paginación -->
+      <!-- Controles de paginación mejorados -->
       <div class="pagination-controls">
-        <button (click)="prevPage()" [disabled]="currentPage === 0">Anterior</button>
-        <span>Página {{ currentPage + 1 }} de {{ math.ceil(totalRecords / pageSize) }}</span>
-        <button (click)="nextPage()" [disabled]="(currentPage + 1) * pageSize >= totalRecords">Siguiente</button>
+        <button (click)="prevPage()" [disabled]="currentPage === 0">
+          ◄ Anterior
+        </button>
+        
+        <span>
+          Página {{ currentPage + 1 }} de {{ totalPages }}
+        </span>
+        
+        <button (click)="nextPage()" [disabled]="currentPage >= totalPages - 1">
+          Siguiente ►
+        </button>
       </div>
     </div>
 
