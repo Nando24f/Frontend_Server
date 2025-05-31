@@ -74,7 +74,7 @@ export class EmployeeComponent implements OnInit {
   }
 
   fetchManagers(): void {
-    this.http.get<Manager[]>(`${this.API_BASE_URL}/managers`).subscribe({
+    this.http.get<Manager[]>(`${this.API_BASE_URL}/managerss`).subscribe({
       next: (data) => {
         this.managers = data;
         if (data.length > 0) {
