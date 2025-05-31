@@ -48,9 +48,17 @@ export class EmployeeComponent implements OnInit {
   constructor(private http: HttpClient) { }
 
   ngOnInit(): void {
-    this.initChartOptions();
-    this.fetchManagers();
-  }
+  this.initChartOptions();
+  this.fetchManagers();
+  
+  // DEBUG: Forzar valores para probar
+  setTimeout(() => {
+    this.maleEmployeesCount = 2668;
+    this.totalEmployees = 50000;
+    this.updateChartData();
+    console.log('Valores forzados aplicados');
+  }, 3000);
+}
 
   initChartOptions(): void {
     this.chartOptions = {
@@ -88,39 +96,52 @@ export class EmployeeComponent implements OnInit {
   }
 
   fetchMaleEmployees(): void {
-    if (!this.selectedManagerId) return;
+  if (!this.selectedManagerId) return;
 
-    this.loading = true;
-
-    // 1. Obtener conteo de hombres
-    this.http.get<{ total_count: number }>(
-      `${this.API_BASE_URL}/employees/manager/${this.selectedManagerId}/males/count`
-    ).subscribe({
+  this.loading = true;
+  
+  // 1. Obtener conteo de empleados masculinos
+  this.http.get<any>(`${this.API_BASE_URL}/employees/manager/${this.selectedManagerId}/males/count`)
+    .subscribe({
       next: (response) => {
-        this.maleEmployeesCount = (response as any).total_count || (response as any)[0]?.count || 0;
-        this.totalRecords = response.total_count;
+        // ¡IMPORTANTE! Aquí debugueamos
+        console.log('RESPUESTA API (male count):', response);
+        
+        // Extraemos el valor como sea que venga
+        const rawCount = response.total_count ?? response[0]?.count ?? response.data?.count;
+        this.maleEmployeesCount = Number(rawCount) || 0;
+        this.totalRecords = this.maleEmployeesCount;
 
-        // 2. Obtener total general de empleados
-        this.http.get<{ total_count: number }>(
-          `${this.API_BASE_URL}/employees/count`
-        ).subscribe({
-          next: (totalResponse) => {
-            this.totalEmployees = (totalResponse as any).total_count || (totalResponse as any)[0]?.count || 0;
-            this.updateChartData();
-            this.loadPage(); // Cargar primera página de resultados
-          },
-          error: (err) => {
-            console.error('Error total employees:', err);
-            this.loading = false;
-          }
-        });
+        console.log('VALOR ASIGNADO (male):', this.maleEmployeesCount);
+
+        // 2. Obtener total de empleados
+        this.http.get<any>(`${this.API_BASE_URL}/employees/count`)
+          .subscribe({
+            next: (totalResponse) => {
+              console.log('RESPUESTA API (total):', totalResponse);
+              
+              const rawTotal = totalResponse.total_count ?? totalResponse[0]?.count ?? totalResponse.data?.count;
+              this.totalEmployees = Number(rawTotal) || 0;
+
+              console.log('VALOR ASIGNADO (total):', this.totalEmployees);
+              
+              this.updateChartData();
+              this.loadPage();
+              this.loading = false;
+            },
+            error: (err) => {
+              console.error('Error total:', err);
+              this.loading = false;
+            }
+          });
       },
       error: (err) => {
         console.error('Error male count:', err);
         this.loading = false;
       }
     });
-  }
+}
+
   loadPage(): void {
     this.http.get<Employee[]>(
       `${this.API_BASE_URL}/employees/manager/${this.selectedManagerId}/males?page=${this.currentPage}&size=${this.pageSize}`
