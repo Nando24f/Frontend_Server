@@ -36,13 +36,15 @@ export class EmployeeComponent implements OnInit {
   chartData: any;
   chartOptions: any;
   
-  // Variables de paginación
+  // Variables de paginación mejoradas
   currentPage: number = 0;
   pageSize: number = 10;
   totalRecords: number = 0;
+  displayedRange: string = '';
+  totalPages: number = 0;
 
   private readonly API_BASE_URL = 'http://200.13.4.251:4200/api';
-  math = Math;
+
   constructor(private http: HttpClient) {}
 
   ngOnInit(): void {
@@ -74,7 +76,7 @@ export class EmployeeComponent implements OnInit {
   }
 
   fetchManagers(): void {
-    this.http.get<Manager[]>(`${this.API_BASE_URL}/managerss`).subscribe({
+    this.http.get<Manager[]>(`${this.API_BASE_URL}/managers`).subscribe({
       next: (data) => {
         this.managers = data;
         if (data.length > 0) {
@@ -94,7 +96,7 @@ export class EmployeeComponent implements OnInit {
     this.loading = true;
     this.maleEmployees = [];
     this.chartData = null;
-    this.currentPage = 0; // Resetear a primera página
+    this.currentPage = 0;
     
     // 1. Obtener conteo total de hombres bajo el manager
     this.http.get<{count: number}[]>(
@@ -103,6 +105,7 @@ export class EmployeeComponent implements OnInit {
       next: (countData) => {
         this.totalRecords = countData[0]?.count || 0;
         this.maleEmployeesCount = this.totalRecords;
+        this.totalPages = Math.ceil(this.totalRecords / this.pageSize);
         
         // 2. Obtener lista paginada de empleados masculinos
         this.loadPage();
@@ -128,6 +131,7 @@ export class EmployeeComponent implements OnInit {
     ).subscribe({
       next: (data) => {
         this.maleEmployees = data;
+        this.updateDisplayedRange();
         this.loading = false;
       },
       error: (err) => {
@@ -137,8 +141,14 @@ export class EmployeeComponent implements OnInit {
     });
   }
 
+  updateDisplayedRange(): void {
+    const startItem = this.currentPage * this.pageSize + 1;
+    const endItem = Math.min((this.currentPage + 1) * this.pageSize, this.totalRecords);
+    this.displayedRange = `Mostrando ${startItem}-${endItem} de ${this.totalRecords}`;
+  }
+
   nextPage(): void {
-    if ((this.currentPage + 1) * this.pageSize < this.totalRecords) {
+    if (this.currentPage < this.totalPages - 1) {
       this.currentPage++;
       this.loadPage();
     }
