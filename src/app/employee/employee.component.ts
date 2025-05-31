@@ -134,21 +134,28 @@ fetchMaleEmployees(): void {
     });
 }
 
-  loadPage(): void {
-    this.http.get<Employee[]>(
-      `${this.API_BASE_URL}/employees/manager/${this.selectedManagerId}/males?page=${this.currentPage}&size=${this.pageSize}`
-    ).subscribe({
-      next: (data) => {
-        this.maleEmployees = data;
-        this.updateDisplayedRange();
-        this.loading = false;
-      },
-      error: (err) => {
-        console.error('Error fetching employees:', err);
-        this.loading = false;
-      }
-    });
-  }
+loadPage(): void {
+  this.http.get<Employee[]>(
+    `${this.API_BASE_URL}/employees/manager/${this.selectedManagerId}/males?page=${this.currentPage}&size=${this.pageSize}`
+  ).subscribe({
+    next: (data) => {
+      this.maleEmployees = data;
+      this.updateDisplayedRange();
+      this.loading = false;
+      
+      // Debug: verifica que lleguen los datos
+      console.log('Datos paginados:', {
+        page: this.currentPage,
+        size: this.pageSize,
+        data: data
+      });
+    },
+    error: (err) => {
+      console.error('Error al cargar página:', err);
+      this.loading = false;
+    }
+  });
+}
 
   updateDisplayedRange(): void {
     const startItem = this.currentPage * this.pageSize + 1;

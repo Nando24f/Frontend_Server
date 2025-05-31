@@ -17,14 +17,10 @@
     <div *ngIf="maleEmployees.length > 0" class="results">
       <h3>Male Employees Under Manager: {{ maleEmployeesCount }}</h3>
       <h3>Total Employees in Company: {{ totalEmployees }}</h3>
-      
+
       <div class="chart-container">
         <h3>Employees Distribution</h3>
-        <p-chart *ngIf="chartData" 
-                 type="pie" 
-                 [data]="chartData"
-                 [options]="chartOptions"
-                 style="height: 300px">
+        <p-chart *ngIf="chartData" type="pie" [data]="chartData" [options]="chartOptions" style="height: 300px">
         </p-chart>
         <div *ngIf="!chartData" class="no-data">
           No hay datos suficientes para mostrar el gráfico
@@ -54,24 +50,23 @@
         </tbody>
       </table>
 
-      <!-- Controles de paginación mejorados -->
       <div class="pagination-controls">
-        <button (click)="prevPage()" [disabled]="currentPage === 0">
+        <button (click)="prevPage()" [disabled]="currentPage === 0 || loading">
           ◄ Anterior
         </button>
-        
+
         <span>
-          Página {{ currentPage + 1 }} de {{ totalPages }}
+          Página {{ currentPage + 1 }} de {{ totalPages }} |
+          {{ displayedRange }}
         </span>
-        
-        <button (click)="nextPage()" [disabled]="currentPage >= totalPages - 1">
+
+        <button (click)="nextPage()" [disabled]="currentPage >= totalPages - 1 || loading">
           Siguiente ►
         </button>
       </div>
-    </div>
 
-    <div *ngIf="maleEmployees.length === 0 && !loading" class="no-results">
-      Select a manager and click "Search" to view male employees
+      <div *ngIf="maleEmployees.length === 0 && !loading" class="no-results">
+        Select a manager and click "Search" to view male employees
+      </div>
     </div>
   </div>
-</div>
