@@ -36,13 +36,6 @@ export class EmployeeComponent implements OnInit {
   chartData: any;
   chartOptions: any;
 
-  // Variables de paginación mejoradas
-  currentPage: number = 0;
-  pageSize: number = 10;
-  totalRecords: number = 0;
-  displayedRange: string = '';
-  totalPages: number = 0;
-
   private readonly API_BASE_URL = 'http://200.13.4.251:4200/api';
 
   constructor(private http: HttpClient) { }
@@ -50,14 +43,6 @@ export class EmployeeComponent implements OnInit {
   ngOnInit(): void {
     this.initChartOptions();
     this.fetchManagers();
-
-    // DEBUG: Forzar valores para probar
-    setTimeout(() => {
-      this.maleEmployeesCount = 2668;
-      this.totalEmployees = 50000;
-      this.updateChartData();
-      console.log('Valores forzados aplicados');
-    }, 3000);
   }
 
   initChartOptions(): void {
@@ -95,86 +80,39 @@ export class EmployeeComponent implements OnInit {
     });
   }
 
-  // Actualiza el método fetchMaleEmployees() con esto:
+  fetchMaleEmployees(): void {
+    if (!this.selectedManagerId) return;
 
-fetchMaleEmployees(): void {
-  if (!this.selectedManagerId) return;
-
-  this.loading = true;
-  
-  // 1. Obtener conteo de hombres (respuesta: [{"total_count": 2668}])
-  this.http.get<any[]>(`${this.API_BASE_URL}/employees/manager/${this.selectedManagerId}/males/count`)
-    .subscribe({
-      next: (response) => {
-        // EXTRACCIÓN CORREGIDA (array con objeto)
-        this.maleEmployeesCount = response[0].total_count;
-        this.totalRecords = this.maleEmployeesCount;
-
-        // 2. Obtener total general (respuesta: [{"total_employees": 300024}])
-        this.http.get<any[]>(`${this.API_BASE_URL}/employees/count`)
-          .subscribe({
-            next: (totalResponse) => {
-              // EXTRACCIÓN CORREGIDA (nota: usa total_employees, no total_count)
-              this.totalEmployees = totalResponse[0].total_employees;
-              
-              this.updateChartData();
-              this.loadPage();
-              this.loading = false;
-            },
-            error: (err) => {
-              console.error('Error total:', err);
-              this.loading = false;
-            }
-          });
+    this.loading = true;
+    
+    // 1. Obtener todos los empleados masculinos
+    this.http.get<Employee[]>(
+      `${this.API_BASE_URL}/employees/manager/${this.selectedManagerId}/males`
+    ).subscribe({
+      next: (data) => {
+        this.maleEmployees = data;
+        this.maleEmployeesCount = data.length;
+        
+        // 2. Obtener total general de empleados
+        this.http.get<{total_employees: number}[]>(
+          `${this.API_BASE_URL}/employees/count`
+        ).subscribe({
+          next: (totalResponse) => {
+            this.totalEmployees = totalResponse[0].total_employees;
+            this.updateChartData();
+            this.loading = false;
+          },
+          error: (err) => {
+            console.error('Error fetching total employees:', err);
+            this.loading = false;
+          }
+        });
       },
       error: (err) => {
-        console.error('Error male count:', err);
+        console.error('Error fetching male employees:', err);
         this.loading = false;
       }
     });
-}
-
-loadPage(): void {
-  this.http.get<Employee[]>(
-    `${this.API_BASE_URL}/employees/manager/${this.selectedManagerId}/males?page=${this.currentPage}&size=${this.pageSize}`
-  ).subscribe({
-    next: (data) => {
-      this.maleEmployees = data;
-      this.updateDisplayedRange();
-      this.loading = false;
-      
-      // Debug: verifica que lleguen los datos
-      console.log('Datos paginados:', {
-        page: this.currentPage,
-        size: this.pageSize,
-        data: data
-      });
-    },
-    error: (err) => {
-      console.error('Error al cargar página:', err);
-      this.loading = false;
-    }
-  });
-}
-
-  updateDisplayedRange(): void {
-    const startItem = this.currentPage * this.pageSize + 1;
-    const endItem = Math.min((this.currentPage + 1) * this.pageSize, this.totalRecords);
-    this.displayedRange = `Mostrando ${startItem}-${endItem} de ${this.totalRecords}`;
-  }
-
-  nextPage(): void {
-    if (this.currentPage < this.totalPages - 1) {
-      this.currentPage++;
-      this.loadPage();
-    }
-  }
-
-  prevPage(): void {
-    if (this.currentPage > 0) {
-      this.currentPage--;
-      this.loadPage();
-    }
   }
 
   updateChartData(): void {
