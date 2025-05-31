@@ -48,17 +48,17 @@ export class EmployeeComponent implements OnInit {
   constructor(private http: HttpClient) { }
 
   ngOnInit(): void {
-  this.initChartOptions();
-  this.fetchManagers();
-  
-  // DEBUG: Forzar valores para probar
-  setTimeout(() => {
-    this.maleEmployeesCount = 2668;
-    this.totalEmployees = 50000;
-    this.updateChartData();
-    console.log('Valores forzados aplicados');
-  }, 3000);
-}
+    this.initChartOptions();
+    this.fetchManagers();
+
+    // DEBUG: Forzar valores para probar
+    setTimeout(() => {
+      this.maleEmployeesCount = 2668;
+      this.totalEmployees = 50000;
+      this.updateChartData();
+      console.log('Valores forzados aplicados');
+    }, 3000);
+  }
 
   initChartOptions(): void {
     this.chartOptions = {
@@ -95,35 +95,27 @@ export class EmployeeComponent implements OnInit {
     });
   }
 
-  fetchMaleEmployees(): void {
+  // Actualiza el método fetchMaleEmployees() con esto:
+
+fetchMaleEmployees(): void {
   if (!this.selectedManagerId) return;
 
   this.loading = true;
   
-  // 1. Obtener conteo de empleados masculinos
-  this.http.get<any>(`${this.API_BASE_URL}/employees/manager/${this.selectedManagerId}/males/count`)
+  // 1. Obtener conteo de hombres (respuesta: [{"total_count": 2668}])
+  this.http.get<any[]>(`${this.API_BASE_URL}/employees/manager/${this.selectedManagerId}/males/count`)
     .subscribe({
       next: (response) => {
-        // ¡IMPORTANTE! Aquí debugueamos
-        console.log('RESPUESTA API (male count):', response);
-        
-        // Extraemos el valor como sea que venga
-        const rawCount = response.total_count ?? response[0]?.count ?? response.data?.count;
-        this.maleEmployeesCount = Number(rawCount) || 0;
+        // EXTRACCIÓN CORREGIDA (array con objeto)
+        this.maleEmployeesCount = response[0].total_count;
         this.totalRecords = this.maleEmployeesCount;
 
-        console.log('VALOR ASIGNADO (male):', this.maleEmployeesCount);
-
-        // 2. Obtener total de empleados
-        this.http.get<any>(`${this.API_BASE_URL}/employees/count`)
+        // 2. Obtener total general (respuesta: [{"total_employees": 300024}])
+        this.http.get<any[]>(`${this.API_BASE_URL}/employees/count`)
           .subscribe({
             next: (totalResponse) => {
-              console.log('RESPUESTA API (total):', totalResponse);
-              
-              const rawTotal = totalResponse.total_count ?? totalResponse[0]?.count ?? totalResponse.data?.count;
-              this.totalEmployees = Number(rawTotal) || 0;
-
-              console.log('VALOR ASIGNADO (total):', this.totalEmployees);
+              // EXTRACCIÓN CORREGIDA (nota: usa total_employees, no total_count)
+              this.totalEmployees = totalResponse[0].total_employees;
               
               this.updateChartData();
               this.loadPage();
