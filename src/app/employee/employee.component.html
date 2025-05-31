@@ -53,6 +53,13 @@
           </tr>
         </tbody>
       </table>
+
+      <!-- Controles de paginación -->
+      <div class="pagination-controls">
+        <button (click)="prevPage()" [disabled]="currentPage === 0">Anterior</button>
+        <span>Página {{ currentPage + 1 }} de {{ math.ceil(totalRecords / pageSize) }}</span>
+        <button (click)="nextPage()" [disabled]="(currentPage + 1) * pageSize >= totalRecords">Siguiente</button>
+      </div>
     </div>
 
     <div *ngIf="maleEmployees.length === 0 && !loading" class="no-results">

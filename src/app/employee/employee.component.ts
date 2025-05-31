@@ -31,13 +31,18 @@ export class EmployeeComponent implements OnInit {
   selectedManagerId: number | null = null;
   maleEmployees: Employee[] = [];
   maleEmployeesCount: number = 0;
-  totalEmployees: number = 0; // Cambiado de totalEmployeesUnderManager a totalEmployees
+  totalEmployees: number = 0;
   loading: boolean = false;
   chartData: any;
   chartOptions: any;
+  
+  // Variables de paginación
+  currentPage: number = 0;
+  pageSize: number = 10;
+  totalRecords: number = 0;
 
   private readonly API_BASE_URL = 'http://200.13.4.251:4200/api';
-
+  math = Math;
   constructor(private http: HttpClient) {}
 
   ngOnInit(): void {
@@ -69,7 +74,7 @@ export class EmployeeComponent implements OnInit {
   }
 
   fetchManagers(): void {
-    this.http.get<Manager[]>(`${this.API_BASE_URL}/managerss`).subscribe({
+    this.http.get<Manager[]>(`${this.API_BASE_URL}/managers`).subscribe({
       next: (data) => {
         this.managers = data;
         if (data.length > 0) {
@@ -89,35 +94,61 @@ export class EmployeeComponent implements OnInit {
     this.loading = true;
     this.maleEmployees = [];
     this.chartData = null;
+    this.currentPage = 0; // Resetear a primera página
     
-    // 1. Obtener lista de empleados masculinos
-    this.http.get<Employee[]>(
-      `${this.API_BASE_URL}/employees/manager/${this.selectedManagerId}/males`
+    // 1. Obtener conteo total de hombres bajo el manager
+    this.http.get<{count: number}[]>(
+      `${this.API_BASE_URL}/employees/manager/${this.selectedManagerId}/males/count`
     ).subscribe({
-      next: (data) => {
-        this.maleEmployees = data;
-        this.maleEmployeesCount = data.length;
+      next: (countData) => {
+        this.totalRecords = countData[0]?.count || 0;
+        this.maleEmployeesCount = this.totalRecords;
         
-        // 2. Obtener TOTAL de empleados en la empresa
+        // 2. Obtener lista paginada de empleados masculinos
+        this.loadPage();
+        
+        // 3. Obtener TOTAL de empleados en la empresa
         this.http.get<{count: number}[]>(
           `${this.API_BASE_URL}/employees/count`
         ).subscribe({
           next: (totalData) => {
             this.totalEmployees = totalData[0]?.count || 0;
             this.updateChartData();
-            this.loading = false;
           },
-          error: (err) => {
-            console.error('Error fetching total employees:', err);
-            this.loading = false;
-          }
+          error: (err) => console.error('Error fetching total employees:', err)
         });
       },
+      error: (err) => console.error('Error fetching male count:', err)
+    });
+  }
+
+  loadPage(): void {
+    this.http.get<Employee[]>(
+      `${this.API_BASE_URL}/employees/manager/${this.selectedManagerId}/males?page=${this.currentPage}&size=${this.pageSize}`
+    ).subscribe({
+      next: (data) => {
+        this.maleEmployees = data;
+        this.loading = false;
+      },
       error: (err) => {
-        console.error('Error fetching male employees:', err);
+        console.error('Error fetching employees:', err);
         this.loading = false;
       }
     });
+  }
+
+  nextPage(): void {
+    if ((this.currentPage + 1) * this.pageSize < this.totalRecords) {
+      this.currentPage++;
+      this.loadPage();
+    }
+  }
+
+  prevPage(): void {
+    if (this.currentPage > 0) {
+      this.currentPage--;
+      this.loadPage();
+    }
   }
 
   updateChartData(): void {
@@ -137,10 +168,6 @@ export class EmployeeComponent implements OnInit {
       };
     } else {
       this.chartData = null;
-      console.warn('Datos insuficientes para el gráfico', {
-        total: this.totalEmployees,
-        males: this.maleEmployeesCount
-      });
     }
   }
 

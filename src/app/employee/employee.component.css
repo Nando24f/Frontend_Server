@@ -80,3 +80,37 @@ tr:hover {
   font-style: italic;
   color: #666;
 }
+/* Tus estilos existentes... */
+
+/* Agrega estos nuevos estilos al final */
+.pagination-controls {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 15px;
+}
+
+.pagination-controls button {
+  padding: 8px 16px;
+  background-color: #4285f4;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.pagination-controls button:hover:not([disabled]) {
+  background-color: #3367d6;
+}
+
+.pagination-controls button[disabled] {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+.pagination-controls span {
+  font-size: 14px;
+  color: #666;
+}
