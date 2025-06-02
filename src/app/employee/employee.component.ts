@@ -133,27 +133,75 @@ export class EmployeeComponent implements OnInit {
         }
       });
   }
+updateChartData(): void {
+  if (this.totalEmployees > 0 && this.maleEmployeesCount > 0) {
+    const otherEmployees = this.totalEmployees - this.maleEmployeesCount;
+    const total = this.maleEmployeesCount + otherEmployees;
 
-  updateChartData(): void {
-    if (this.totalEmployees > 0 && this.maleEmployeesCount > 0) {
-      const otherEmployees = this.totalEmployees - this.maleEmployeesCount;
+    this.chartData = {
+      labels: ['Hombres bajo manager', 'Otros empleados'],
+      datasets: [{
+        data: [this.maleEmployeesCount, otherEmployees],
+        backgroundColor: ['#36A2EB', '#FFCE56'],  // Colores más vibrantes
+        hoverBackgroundColor: ['#5CB3FF', '#FFDD7E'],
+        borderWidth: 1
+      }]
+    };
 
-      this.chartData = {
-        labels: ['Hombres bajo manager', 'Total otros empleados'],
-        datasets: [
-          {
-            data: [this.maleEmployeesCount, otherEmployees],
-            backgroundColor: ['#42A5F5', '#FFA726'],
-            hoverBackgroundColor: ['#64B5F6', '#FFB74D'],
-            borderWidth: 1
+    this.chartOptions = {
+      plugins: {
+        legend: {
+          position: 'right',
+          labels: {
+            padding: 20,
+            font: {
+              size: 14,
+              family: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+              weight: 'bold'
+            },
+            generateLabels: (chart: any) => {
+              const data = chart.data;
+              return data.labels.map((label: string, i: number) => {
+                const value = data.datasets[0].data[i];
+                const percentage = Math.round((value / total) * 100);
+                return {
+                  text: `${label}: ${percentage}%`,  // Más limpio sin el valor absoluto
+                  fillStyle: data.datasets[0].backgroundColor[i],
+                  fontColor: '#333',
+                  hidden: false,
+                  lineWidth: 1
+                };
+              });
+            }
           }
-        ]
-      };
-    } else {
-      this.chartData = null;
-    }
+        },
+        tooltip: {
+          displayColors: true,
+          backgroundColor: 'rgba(0,0,0,0.8)',
+          bodyFont: {
+            size: 14,
+            weight: 'bold'
+          },
+          callbacks: {
+            label: (context: any) => {
+              const label = context.label || '';
+              const value = context.raw || 0;
+              const percentage = Math.round((value / total) * 100);
+              return ` ${label}: ${value.toLocaleString()} (${percentage}%)`;
+            }
+          }
+        }
+      },
+      cutout: '70%',  // Para gráfico tipo donut (opcional)
+      animation: {
+        animateScale: true,
+        animateRotate: true
+      }
+    };
+  } else {
+    this.chartData = null;
   }
-
+}
   onSearch(): void {
     if (!this.selectedManagerId) {
       alert('Por favor selecciona un manager');
