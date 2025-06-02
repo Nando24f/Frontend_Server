@@ -43,6 +43,14 @@ export class EmployeeComponent implements OnInit {
   ngOnInit(): void {
     this.initChartOptions();
     this.fetchManagers();
+
+    // DEBUG: Forzar valores para probar
+    setTimeout(() => {
+      this.maleEmployeesCount = 2668;
+      this.totalEmployees = 50000;
+      this.updateChartData();
+      console.log('Valores forzados aplicados');
+    }, 3000);
   }
 
   initChartOptions(): void {
@@ -85,30 +93,45 @@ export class EmployeeComponent implements OnInit {
 
     this.loading = true;
     
-    // 1. Obtener todos los empleados
-    this.http.get<Employee[]>(`${this.API_BASE_URL}/employees/manager/${this.selectedManagerId}/males/all`).subscribe({
-      next: (data) => {
-        this.maleEmployees = data;
-        this.maleEmployeesCount = data.length;
-        
-        // 2. Obtener total general
-        this.http.get<any[]>(`${this.API_BASE_URL}/employees/count`).subscribe({
-          next: (totalResponse) => {
-            this.totalEmployees = totalResponse[0].total_employees;
-            this.updateChartData();
-            this.loading = false;
-          },
-          error: (err) => {
-            console.error('Error total:', err);
-            this.loading = false;
-          }
-        });
-      },
-      error: (err) => {
-        console.error('Error fetching employees:', err);
-        this.loading = false;
-      }
-    });
+    // 1. Obtener conteo de hombres
+    this.http.get<any[]>(`${this.API_BASE_URL}/employees/manager/${this.selectedManagerId}/males/count`)
+      .subscribe({
+        next: (response) => {
+          this.maleEmployeesCount = response[0].total_count;
+
+          // 2. Obtener total general
+          this.http.get<any[]>(`${this.API_BASE_URL}/employees/count`)
+            .subscribe({
+              next: (totalResponse) => {
+                this.totalEmployees = totalResponse[0].total_employees;
+                
+                // 3. Obtener TODOS los empleados (usando un tamaño mayor que el total)
+                const size = this.maleEmployeesCount + 100;
+                this.http.get<Employee[]>(
+                  `${this.API_BASE_URL}/employees/manager/${this.selectedManagerId}/males?size=${size}`
+                ).subscribe({
+                  next: (data) => {
+                    this.maleEmployees = data;
+                    this.updateChartData();
+                    this.loading = false;
+                  },
+                  error: (err) => {
+                    console.error('Error al cargar empleados:', err);
+                    this.loading = false;
+                  }
+                });
+              },
+              error: (err) => {
+                console.error('Error total:', err);
+                this.loading = false;
+              }
+            });
+        },
+        error: (err) => {
+          console.error('Error male count:', err);
+          this.loading = false;
+        }
+      });
   }
 
   updateChartData(): void {
