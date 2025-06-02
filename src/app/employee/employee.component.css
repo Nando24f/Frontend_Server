@@ -87,3 +87,13 @@ tr:hover {
   background-color: #f8f9fa;
   border-radius: 5px;
 }
+.compact-chart-container {
+  max-width: 400px; 
+  margin: 0 auto;
+  padding: 10px;
+}
+
+/* Opcional: Ajustar tabla para mejor integración */
+table {
+  margin-top: 15px !important;
+}

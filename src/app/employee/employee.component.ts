@@ -139,25 +139,23 @@ updateChartData(): void {
     const total = this.maleEmployeesCount + otherEmployees;
 
     this.chartData = {
-      labels: ['Hombres bajo manager', 'Otros empleados'],
+      labels: ['Hombres', 'Otros'],
       datasets: [{
         data: [this.maleEmployeesCount, otherEmployees],
-        backgroundColor: ['#36A2EB', '#FFCE56'],  // Colores más vibrantes
-        hoverBackgroundColor: ['#5CB3FF', '#FFDD7E'],
-        borderWidth: 1
+        backgroundColor: ['#4285F4', '#34A853'], // Colores de Google (azul/verde)
+        borderWidth: 0 // Sin borde para más limpieza
       }]
     };
 
     this.chartOptions = {
       plugins: {
         legend: {
-          position: 'right',
+          position: 'bottom', // Leyenda abajo para ahorrar espacio
           labels: {
-            padding: 20,
+            boxWidth: 12,
+            padding: 8,
             font: {
-              size: 14,
-              family: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-              weight: 'bold'
+              size: 12
             },
             generateLabels: (chart: any) => {
               const data = chart.data;
@@ -165,38 +163,27 @@ updateChartData(): void {
                 const value = data.datasets[0].data[i];
                 const percentage = Math.round((value / total) * 100);
                 return {
-                  text: `${label}: ${percentage}%`,  // Más limpio sin el valor absoluto
+                  text: `${label} (${percentage}%)`, // Texto compacto
                   fillStyle: data.datasets[0].backgroundColor[i],
-                  fontColor: '#333',
-                  hidden: false,
-                  lineWidth: 1
+                  fontColor: '#444',
+                  lineWidth: 0
                 };
               });
             }
           }
         },
         tooltip: {
-          displayColors: true,
-          backgroundColor: 'rgba(0,0,0,0.8)',
-          bodyFont: {
-            size: 14,
-            weight: 'bold'
-          },
+          enabled: true,
+          bodyFont: { size: 12 },
           callbacks: {
             label: (context: any) => {
-              const label = context.label || '';
-              const value = context.raw || 0;
-              const percentage = Math.round((value / total) * 100);
-              return ` ${label}: ${value.toLocaleString()} (${percentage}%)`;
+              return ` ${context.raw.toLocaleString()} empleados`;
             }
           }
         }
       },
-      cutout: '70%',  // Para gráfico tipo donut (opcional)
-      animation: {
-        animateScale: true,
-        animateRotate: true
-      }
+      maintainAspectRatio: false, // Permite controlar el tamaño libremente
+      cutout: '65%', // Donut delgado
     };
   } else {
     this.chartData = null;
